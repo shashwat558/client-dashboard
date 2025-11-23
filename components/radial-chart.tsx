@@ -3,7 +3,14 @@
 import { TrendingUp } from "lucide-react"
 import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts"
 
-
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   ChartConfig,
   ChartContainer,
@@ -11,18 +18,22 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 
-export const description = "A radial chart with stacked sections"
 
-const chartData = [{ month: "january", desktop: 1260, mobile: 570 }]
+const chartData = [{ desktop: 1260, mobile: 570, tablet: 300 }]
 
 const chartConfig = {
+
   desktop: {
     label: "Desktop",
-    color: "var(--chart-1)",
+    color: "hsl(220 100% 50%)", 
   },
   mobile: {
     label: "Mobile",
-    color: "var(--chart-2)",
+    color: "hsl(210 40% 90%)", 
+  },
+  tablet: {
+    label: "Tablet",
+    color: "hsl(210 100% 70%)"
   },
 } satisfies ChartConfig
 
@@ -30,67 +41,48 @@ export function ChartRadialStacked() {
   const totalVisitors = chartData[0].desktop + chartData[0].mobile
 
   return (
-    <div className="flex flex-col">
-      
-      <div className="flex flex-1 items-center pb-0">
-        <ChartContainer
-          config={chartConfig}
-          className="mx-auto aspect-square w-full max-w-[250px]"
+    <div className="w-full flex items-center justify-center">
+      <ChartContainer
+        config={chartConfig}
+        className="w-[310px] h-[310px]"
+      >
+        <RadialBarChart
+          data={chartData}
+          endAngle={180}
+          innerRadius={140}
+          outerRadius={210}
         >
-          <RadialBarChart
-            data={chartData}
-            endAngle={180}
-            innerRadius={80}
-            outerRadius={130}
-          >
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent hideLabel />}
             />
             <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
-              <Label
-                content={({ viewBox }) => {
-                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                    return (
-                      <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
-                        <tspan
-                          x={viewBox.cx}
-                          y={(viewBox.cy || 0) - 16}
-                          className="fill-foreground text-2xl font-bold"
-                        >
-                          {totalVisitors.toLocaleString()}
-                        </tspan>
-                        <tspan
-                          x={viewBox.cx}
-                          y={(viewBox.cy || 0) + 4}
-                          className="fill-muted-foreground"
-                        >
-                          Visitors
-                        </tspan>
-                      </text>
-                    )
-                  }
-                }}
-              />
+              
             </PolarRadiusAxis>
+            
+            <RadialBar
+              dataKey="mobile"
+              fill="var(--color-mobile)" 
+              stackId="a"
+              cornerRadius={1}
+              className="stroke-transparent stroke-2"
+            />
+            <RadialBar
+              dataKey="tablet"
+              fill="var(--color-tablet)" 
+              stackId="a"
+              cornerRadius={1}
+              className="stroke-transparent stroke-2"
+            />
             <RadialBar
               dataKey="desktop"
               stackId="a"
-              cornerRadius={5}
-              fill="var(--color-desktop)"
+              cornerRadius={1}
+              fill="var(--color-desktop)" 
               className="stroke-transparent stroke-2"
             />
-            <RadialBar
-              dataKey="mobile"
-              fill="var(--color-mobile)"
-              stackId="a"
-              cornerRadius={5}
-              className="stroke-transparent stroke-2"
-            />
-          </RadialBarChart>
-        </ChartContainer>
-      </div>
-     
+        </RadialBarChart>
+      </ChartContainer>
     </div>
   )
 }

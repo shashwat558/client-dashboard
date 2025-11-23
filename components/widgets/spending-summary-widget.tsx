@@ -51,15 +51,14 @@ export function SpendingSummaryWidget() {
       </div>
       
       <Separator />
-      <div className="flex items-center justify-center mb-1.5">
-        <div className="relative">
-            <ChartRadialStacked />
-  
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <p className="text-xs text-gray-500 mb-1">SPEND</p>
-            <p className="text-2xl font-bold text-gray-900">$1,800.00</p>
-          </div>
+      <div className="relative w-full h-[150px] flex flex-col items-center justify-center">
+        <div className="w-full h-full">
+          <ChartRadialStacked />
         </div>
+        <div className="absolute inset-0 top-[80%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center pointer-events-none">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">SPEND</p>
+          <p className="text-3xl font-semibold text-gray-900">$1,800.00</p>
+        </div>  
       </div>
       <Separator />
 

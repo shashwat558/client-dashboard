@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Grid3x3,
   CreditCard,
@@ -13,10 +13,12 @@ import {
   ChevronRight,
   ArrowUpDown,
   CheckCircle2,
+  X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Separator } from "./ui/separator"
+
+import Image from "next/image"
 
 const navItems = [
   { icon: Grid3x3, label: "Dashboard", active: true },
@@ -32,20 +34,60 @@ const otherItems = [
   { icon: Headphones, label: "Support" },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean
+  onClose?: () => void
+}
+
+export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const [activeItem, setActiveItem] = useState("Dashboard")
 
+  const [isBelow1540, setIsBelow1540] = useState(false)
+
+  useEffect(() => {
+    const checkWidth = () => {
+      setIsBelow1540(window.innerWidth < 1540)
+    }
+    if (typeof window !== 'undefined') {
+      checkWidth()
+    }
+    window.addEventListener('resize', checkWidth)
+    return () => window.removeEventListener('resize', checkWidth)
+  }, [])
+
+  const handleItemClick = (label: string) => {
+    setActiveItem(label)
+    // Close sidebar below 1540px after clicking an item
+    if (isBelow1540 && onClose) {
+      onClose()
+    }
+  }
+
+  // Always visible at 1540px and above
+  const shouldShow = isOpen || !isBelow1540
+
   return (
-    <div className="w-[320px] bg-white border-r border-gray-200 flex flex-col h-full relative">
+    <aside 
+      className={cn(
+        isBelow1540 ? "fixed" : "static",
+        "top-0 left-0",
+        "w-[320px] shrink-0",
+        "bg-white",
+        "border-r border-gray-200",
+        "flex flex-col",
+        "h-full",
+        isBelow1540 ? "z-50" : "z-auto",
+        isBelow1540 && "transform transition-transform duration-300 ease-in-out",
+        shouldShow ? "translate-x-0" : "-translate-x-full"
+      )}
+      style={!isBelow1540 ? { transform: 'none' } : undefined}
+    >
       
       <div className="p-6">
         <div className="flex items-center gap-3">
           
           <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
-            <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 8L14 6L16 12L8 14L6 8Z" fill="white" fillOpacity="0.85"/>
-              <path d="M8 10L16 8L18 14L10 16L8 10Z" fill="white"/>
-            </svg>
+            <Image src="/apex-logo.png" alt="Card Logo" width={32} height={32} />
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="font-bold text-gray-900 text-base">Apex</h1>
@@ -55,6 +97,16 @@ export function Sidebar() {
           <button className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center shrink-0 transition-colors">
             <ArrowUpDown className="w-4 h-4 text-gray-600" />
           </button>
+          
+          {/* Close button for mobile */}
+          {onClose && (
+            <button 
+              onClick={onClose}
+              className="lg:hidden w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center shrink-0 transition-colors ml-2"
+            >
+              <X className="w-4 h-4 text-gray-600" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -71,7 +123,7 @@ export function Sidebar() {
                     <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-1 h-5 bg-blue-600 rounded-r-full z-10" />
                   )}
                   <button
-                    onClick={() => setActiveItem(item.label)}
+                    onClick={() => handleItemClick(item.label)}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                       isActive 
@@ -100,7 +152,7 @@ export function Sidebar() {
                     <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-1 h-5 bg-blue-600 rounded-r-full z-10" />
                   )}
                   <button
-                    onClick={() => setActiveItem(item.label)}
+                    onClick={() => handleItemClick(item.label)}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                       isActive 
@@ -118,11 +170,11 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* User Profile Section */}
+     
       <div className="p-4 border-t border-gray-200">
         <div className="flex items-center gap-3">
-          <Avatar className="w-10 h-10 shrink-0">
-            <AvatarImage src="/man.jpg" />
+          <Avatar className="w-10 h-10 shrink-0 bg-blue-200">
+            <AvatarImage src="/profile.png" />
             <AvatarFallback>AT</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
@@ -135,6 +187,6 @@ export function Sidebar() {
           <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
         </div>
       </div>
-    </div>
+    </aside>
   )
 }

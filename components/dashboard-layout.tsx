@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { MyCardsWidget } from "@/components/widgets/my-cards-widget"
@@ -17,29 +18,54 @@ const inter = Inter({
  })
 
 export function DashboardLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [shouldToggle, setShouldToggle] = useState(true) // Start with true to avoid flash
+
+  useEffect(() => {
+    const checkWidth = () => {
+      const needsToggle = window.innerWidth < 1540
+      setShouldToggle(needsToggle)
+      // Auto-open sidebar when resizing above 1540px
+      if (!needsToggle) {
+        setSidebarOpen(false) // Keep sidebar state clean, but it will always show via CSS
+      }
+    }
+    // Check immediately on mount
+    if (typeof window !== 'undefined') {
+      checkWidth()
+    }
+    window.addEventListener('resize', checkWidth)
+    return () => window.removeEventListener('resize', checkWidth)
+  }, [])
+
   return (
-    <div className={`flex gap-3 h-screen ${inter.className} bg-white`}>
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden ">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-4">
-          <div className=" grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1 space-y-6">
+    <div className={`flex gap-3 h-screen ${inter.className} bg-white relative overflow-hidden`}>
+      {sidebarOpen && shouldToggle && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      <Sidebar isOpen={shouldToggle ? sidebarOpen : true} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <Header onMenuClick={() => setSidebarOpen(true)} shouldShowMenu={shouldToggle} />
+        <main className="flex-1 overflow-y-auto p-3 lg:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+            <div className="md:col-span-1 space-y-4 lg:space-y-6">
               <MyCardsWidget />
               <RecentTransactionsWidget />
             </div>
-            <div className="lg:col-span-1 space-y-6">
+            <div className="md:col-span-1 space-y-4 lg:space-y-6">
               <SpendingSummaryWidget />
               <MySubscriptionsWidget />
             </div>
-            <div className="lg:col-span-1 space-y-6">
+            <div className="md:col-span-2 lg:col-span-1 space-y-4 lg:space-y-6">
               <TotalExpensesWidget />
               <ExchangeWidget />
               <CreditScoreWidget />
-              
             </div>
           </div>
-
         </main>
       </div>
     </div>

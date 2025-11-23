@@ -44,7 +44,10 @@ export function MySubscriptionsWidget() {
     <Card className="p-4 px-6 shadow-2xs">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Menu className="w-5 h-5 text-gray-600" />
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19.2 21H4.80002C4.56133 21 4.33241 20.9052 4.16363 20.7364C3.99485 20.5676 3.90002 20.3387 3.90002 20.1V3.9C3.90002 3.66131 3.99485 3.43239 4.16363 3.2636C4.33241 3.09482 4.56133 3 4.80002 3H19.2C19.4387 3 19.6676 3.09482 19.8364 3.2636C20.0052 3.43239 20.1 3.66131 20.1 3.9V20.1C20.1 20.3387 20.0052 20.5676 19.8364 20.7364C19.6676 20.9052 19.4387 21 19.2 21ZM18.3 19.2V4.8H5.70002V19.2H18.3ZM8.40002 7.5H15.6V9.3H8.40002V7.5ZM8.40002 11.1H15.6V12.9H8.40002V11.1ZM8.40002 14.7H15.6V16.5H8.40002V14.7Z" fill="#525866"/>
+            </svg>
+
           <h3 className="text-lg text-gray-900">My Subscriptions</h3>
         </div>
         <button className="px-3 py-1.5 text-sm text-gray-600 bg-white border border-gray-200 rounded-sm hover:bg-gray-50 transition-colors shadow-xs">
@@ -57,7 +60,7 @@ export function MySubscriptionsWidget() {
         </div>
 
         <div className="relative z-10">
-          <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0">
             <Image src="/apple-music.png" alt="Apple Music" width={100} height={100} />
           </div>
           
@@ -73,7 +76,7 @@ export function MySubscriptionsWidget() {
         {subscriptions.map((subscription, index) => (
           <div key={index}>
             <div className="flex items-center gap-3 py-3 hover:bg-gray-50 transition-colors">
-              <div className={cn("w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 p-[6px] border border-gray-200")}>
+              <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0 p-[6px] border border-gray-200")}>
                 {subscription.icon === "spotify" && <SpotifyIcon className="w-5 h-5 text-white" />}
                 {subscription.icon === "youtube" && <YoutubeIcon className="w-5 h-5 text-white" />}
                 {subscription.icon === "prime" && <PrimeVideoIcon className="w-5 h-5 text-white" />}
