@@ -2,13 +2,35 @@
 
 import { useState } from "react"
 import { Card } from "@/components/ui/card"
-import { ChevronRight, Building2, TrendingUp, Home } from "lucide-react"
+import { ChevronRight, LucideIcon, Building2, TrendingUp, Home } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 
-const transactions = [
+export interface Transaction {
+  id?: string
+  icon?: LucideIcon | string
+  iconBg?: string
+  title: string
+  description: string
+  amount: string | number
+  date: string
+  onClick?: () => void
+}
+
+export interface RecentTransactionsWidgetProps {
+  title?: string
+  transactions?: Transaction[]
+  tabs?: string[]
+  defaultTab?: string
+  onSeeAll?: () => void
+  onTransactionClick?: (transaction: Transaction) => void
+  onTabChange?: (tab: string) => void
+}
+
+const defaultTransactions: Transaction[] = [
   {
-    icon: Building2,
+    id: "1",
+    icon: "Building2",
     iconBg: "",
     title: "Salary Deposit",
     description: "Monthly salary from Apex...",
@@ -16,24 +38,25 @@ const transactions = [
     date: "Sep 18"
   },
   {
-    icon: TrendingUp,
+    id: "2",
+    icon: "TrendingUp",
     iconBg: "",
-
     title: "Stock Dividend",
     description: "Payment from stock investm...",
     amount: "$846.14",
     date: "Sep 18",
   },
   {
-    icon: Home,
+    id: "3",
+    icon: "Home",
     iconBg: "bg-green-100",
-
     title: "Rental Income",
     description: "Rental payment from Mr. Du...",
     amount: "$100.00",
     date: "Sep 17",
   },
   {
+    id: "4",
     icon: "amazon",
     iconBg: "",
     title: "Refund from Amazon",
@@ -43,8 +66,18 @@ const transactions = [
   },
 ]
 
-export function RecentTransactionsWidget() {
-  const [activeTab, setActiveTab] = useState("Incoming")
+const defaultTabs = ["Incoming", "Outgoing", "Pending"]
+
+export function RecentTransactionsWidget({
+  title = "Recent Transactions",
+  transactions = defaultTransactions,
+  tabs = defaultTabs,
+  defaultTab = "Incoming",
+  onSeeAll,
+  onTransactionClick,
+  onTabChange
+}: RecentTransactionsWidgetProps) {
+  const [activeTab, setActiveTab] = useState(defaultTab)
 
   return (
     <Card className="p-4 px-6 shadow-2xs">
@@ -56,17 +89,23 @@ export function RecentTransactionsWidget() {
               </svg>
 
           </div>
-          <h3 className="text-lg font-medium text-gray-900">Recent Transactions</h3>
+          <h3 className="text-lg font-medium text-gray-900">{title}</h3>
         </div>
-        <button className="px-3 py-1.5 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+        <button 
+          onClick={onSeeAll}
+          className="px-3 py-1.5 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+        >
           See All
         </button>
       </div>
       <div className="flex gap-2 bg-gray-100 rounded-md p-1">
-        {["Incoming", "Outgoing", "Pending"].map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => {
+              setActiveTab(tab)
+              onTabChange?.(tab)
+            }}
             className={cn(
               "flex-1 py-1 rounded-md text-sm font-medium transition-colors cursor-pointer",
               activeTab === tab
@@ -79,30 +118,44 @@ export function RecentTransactionsWidget() {
         ))}
       </div>
       <div className="space-y-2">
-        {transactions.map((transaction, index) => (
-          <div
-            key={index}
-            className="flex items-center gap-3 p-2 hover:px-4 transition-all duration-300 hover:bg-gray-100 rounded-lg cursor-pointer"
-          >
-            <div className={cn("w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0", transaction.iconBg)}>
-              {transaction.icon === "amazon" ? (
-                <AmazonIcon className={cn("w-5 h-5")} />
-              ) : (
-                <transaction.icon className={cn("w-5 h-5")} />
-              )}
-            </div>
+        {transactions.map((transaction, index) => {
+          const IconComponent = typeof transaction.icon === 'string' 
+            ? null 
+            : transaction.icon
+          
+          return (
+            <div
+              key={transaction.id || index}
+              onClick={() => {
+                transaction.onClick?.()
+                onTransactionClick?.(transaction)
+              }}
+              className="flex items-center gap-3 p-2 hover:px-4 transition-all duration-300 hover:bg-gray-100 rounded-lg cursor-pointer"
+            >
+              <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", transaction.iconBg)}>
+                {transaction.icon === "amazon" ? (
+                  <AmazonIcon className={cn("w-5 h-5")} />
+                ) : IconComponent ? (
+                  <IconComponent className={cn("w-5 h-5")} />
+                ) : null}
+              </div>
             
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-900 truncate">{transaction.title}</p>
-              <p className="text-xs text-gray-500 truncate">{transaction.description}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-900 truncate">{transaction.title}</p>
+                <p className="text-xs text-gray-500 truncate">{transaction.description}</p>
+              </div>
+              <div className="text-right shrink-0 mr-2">
+                <p className="text-sm text-gray-900">
+                  {typeof transaction.amount === 'number' 
+                    ? `$${transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    : transaction.amount}
+                </p>
+                <p className="text-xs text-gray-500">{transaction.date}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-700 shrink-0" />
             </div>
-            <div className="text-right flex-shrink-0 mr-2">
-              <p className="text-sm text-gray-900">{transaction.amount}</p>
-              <p className="text-xs text-gray-500">{transaction.date}</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-700 flex-shrink-0" />
-          </div>
-        ))}
+          )
+        })}
       </div>
     </Card>
   )

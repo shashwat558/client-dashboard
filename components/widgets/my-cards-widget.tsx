@@ -6,8 +6,67 @@ import { Plus, ChevronLeft, ChevronRight, CreditCard, CheckCircle2, Wifi } from 
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 
-export function MyCardsWidget() {
-  const [activeTab, setActiveTab] = useState("Weekly")
+export interface CardData {
+  id: string
+  name: string
+  balance: number
+  logo?: string
+  cardType?: string
+  status?: "Active" | "Inactive" | "Expired"
+}
+
+export interface SpendingLimit {
+  current: number
+  limit: number
+  period: string
+  percentage: number
+}
+
+export interface MyCardsWidgetProps {
+  title?: string
+  cards?: CardData[]
+  tabs?: string[]
+  spendingLimit?: SpendingLimit
+  onAddCard?: () => void
+  onCardChange?: (direction: "prev" | "next") => void
+  onTabChange?: (tab: string) => void
+  onSpendingLimitClick?: () => void
+}
+
+const defaultCards: CardData[] = [
+  {
+    id: "1",
+    name: "Savings Card",
+    balance: 16058.94,
+    logo: "/apex-logo.png",
+    cardType: "/mastercard.png",
+    status: "Active"
+  }
+]
+
+const defaultTabs = ["Daily", "Weekly", "Monthly"]
+
+const defaultSpendingLimit: SpendingLimit = {
+  current: 1500,
+  limit: 2000,
+  period: "week",
+  percentage: 75
+}
+
+export function MyCardsWidget({
+  title = "My Cards",
+  cards = defaultCards,
+  tabs = defaultTabs,
+  spendingLimit = defaultSpendingLimit,
+  onAddCard,
+  onCardChange,
+  onTabChange,
+  onSpendingLimitClick
+}: MyCardsWidgetProps) {
+  const [activeTab, setActiveTab] = useState(tabs[0] || "Weekly")
+  const [currentCardIndex, setCurrentCardIndex] = useState(0)
+  
+  const currentCard = cards[currentCardIndex] || cards[0]
 
   return (
     <Card className="p-4 px-6 shadow-2xs">
@@ -15,9 +74,12 @@ export function MyCardsWidget() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <CreditCard className="w-5 h-5 text-gray-600" />
-          <h3 className="text-lg font-medium text-gray-900">My Cards</h3>
+          <h3 className="text-lg font-medium text-gray-900">{title}</h3>
         </div>
-        <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-200 transition-colors">
+        <button 
+          onClick={onAddCard}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-sm hover:bg-gray-200 transition-colors"
+        >
           <Plus className="w-4 h-4" />
           Add Card
         </button>
@@ -41,49 +103,74 @@ export function MyCardsWidget() {
         <div className="flex items-center justify-between mb-4 relative z-10">
           <div className="flex items-center gap-3">
             
-            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
-              <Image src="/apex-logo.png" alt="Card Logo" width={32} height={32} />
-            </div>
+            {currentCard.logo && (
+              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
+                <Image src={currentCard.logo} alt="Card Logo" width={32} height={32} />
+              </div>
+            )}
             
             <Wifi className="w-6 h-6 text-gray-400 rotate-90" />
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 border-gray-300 border border-solid rounded-sm">
-              <CheckCircle2 className="w-4 h-4 bg-green-500 rounded-full text-white" />
-              <span className="text-xs font-medium">Active</span>
-            </div>
+            {currentCard.status && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 border-gray-300 border border-solid rounded-sm">
+                <CheckCircle2 className="w-4 h-4 bg-green-500 rounded-full text-white" />
+                <span className="text-xs font-medium">{currentCard.status}</span>
+              </div>
+            )}
           </div>
           
           <div className="flex items-center gap-3">        
-            
-            
-             <Image src="/mastercard.png" alt="Card Logo" width={58} height={58} />
+            {currentCard.cardType && (
+              <Image src={currentCard.cardType} alt="Card Type" width={58} height={58} />
+            )}
           </div>
         </div>
 
         
         <div className="mb-4 relative z-10">
           <div>
-            <p className="text-sm text-gray-600 mb-2">Savings Card</p>
-            <p className="text-4xl text-gray-900">$16,058.94</p>
+            <p className="text-sm text-gray-600 mb-2">{currentCard.name}</p>
+            <p className="text-4xl text-gray-900">
+              ${currentCard.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
           </div>
         </div>
         
-        <div className="absolute bottom-4 right-4 flex items-center z-10">
-          <button className="w-8 h-8 rounded-l-sm border border-gray-200 border-solid bg-white flex items-center justify-center hover:bg-gray-100 transition-colors">
-            <ChevronLeft className="w-4 h-4 text-gray-600" />
-          </button>
-          <button className="w-8 h-8 border border-gray-200 border-solid bg-white rounded-r-sm flex items-center justify-center hover:bg-gray-100 transition-colors">
-            <ChevronRight className="w-4 h-4 text-gray-600" />
-          </button>
-        </div>
+        {cards.length > 1 && (
+          <div className="absolute bottom-4 right-4 flex items-center z-10">
+            <button 
+              onClick={() => {
+                const newIndex = currentCardIndex === 0 ? cards.length - 1 : currentCardIndex - 1
+                setCurrentCardIndex(newIndex)
+                onCardChange?.("prev")
+              }}
+              className="w-8 h-8 rounded-l-sm border border-gray-200 border-solid bg-white flex items-center justify-center hover:bg-gray-100 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4 text-gray-600" />
+            </button>
+            <button 
+              onClick={() => {
+                const newIndex = currentCardIndex === cards.length - 1 ? 0 : currentCardIndex + 1
+                setCurrentCardIndex(newIndex)
+                onCardChange?.("next")
+              }}
+              className="w-8 h-8 border border-gray-200 border-solid bg-white rounded-r-sm flex items-center justify-center hover:bg-gray-100 transition-colors"
+            >
+              <ChevronRight className="w-4 h-4 text-gray-600" />
+            </button>
+          </div>
+        )}
         
       </div>
 
       
       <div className="flex rounded-sm border border-gray-200 overflow-hidden bg-white mt-1">
-        {["Daily", "Weekly", "Monthly"].map((tab, index) => (
+        {tabs.map((tab, index) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => {
+              setActiveTab(tab)
+              onTabChange?.(tab)
+            }}
             className={cn(
               "flex-1 py-2 px-4 text-sm font-medium transition-colors text-center relative",
               activeTab === tab 
@@ -100,7 +187,6 @@ export function MyCardsWidget() {
       
       <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
         <div className="flex items-center gap-4">
-          
           <div className="relative w-12 h-12 shrink-0">
             <svg className="w-12 h-12 transform -rotate-90" viewBox="0 0 48 48">
               <circle 
@@ -119,7 +205,7 @@ export function MyCardsWidget() {
                 stroke="#3b82f6"
                 strokeWidth="4"
                 strokeDasharray="125.66"
-                strokeDashoffset="31.42"
+                strokeDashoffset={125.66 - (125.66 * spendingLimit.percentage) / 100}
                 strokeLinecap="round"
               />
             </svg>
@@ -127,11 +213,14 @@ export function MyCardsWidget() {
           <div>
             <p className="text-sm text-gray-600 mb-0.5">Spending Limit</p>
             <p className="text-lg font-semibold text-gray-900">
-              $1,500.00 <span className="text-sm text-gray-500 font-normal">/ week</span>
+              ${spendingLimit.current.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm text-gray-500 font-normal">/ {spendingLimit.period}</span>
             </p>
           </div>
         </div>
-        <button className="w-8 h-8 border border-solid bg-white rounded-sm flex items-center justify-center hover:bg-gray-100 transition-colors shrink-0">
+        <button 
+          onClick={onSpendingLimitClick}
+          className="w-8 h-8 border border-solid bg-white rounded-sm flex items-center justify-center hover:bg-gray-100 transition-colors shrink-0"
+        >
           <ChevronRight className="w-5 h-5 text-gray-400" />
         </button>
       </div>

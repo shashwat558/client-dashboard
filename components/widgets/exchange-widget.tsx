@@ -7,54 +7,104 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import Image from "next/image"
 
-const CURRENCIES = {
-  USD: { name: "US Dollar", flag: "/usa-flag.png", symbol: "$" },
-  EUR: { name: "Euro", flag: "/eur.png", symbol: "€" },
-  GBP: { name: "British Pound", flag: "/gbp.png", symbol: "£" },
-  JPY: { name: "Japanese Yen", flag: "/jpy.png", symbol: "¥" },
-  CAD: { name: "Canadian Dollar", flag: "/cad.png", symbol: "C$" },
-  AUD: { name: "Australian Dollar", flag: "/aud.png", symbol: "A$" },
+export interface Currency {
+  code: string
+  name: string
+  flag: string
+  symbol: string
 }
 
-const EXCHANGE_RATES: Record<string, Record<string, number>> = {
+export interface ExchangeRates {
+  [fromCurrency: string]: {
+    [toCurrency: string]: number
+  }
+}
+
+export interface ExchangeWidgetProps {
+  title?: string
+  currencies?: Record<string, Currency>
+  exchangeRates?: ExchangeRates
+  defaultFromCurrency?: string
+  defaultToCurrency?: string
+  defaultAmount?: number
+  availableBalance?: number
+  taxRate?: number
+  feeRate?: number
+  onExchange?: (from: string, to: string, amount: number) => void
+  onCurrenciesClick?: () => void
+  onFromCurrencyChange?: (currency: string) => void
+  onToCurrencyChange?: (currency: string) => void
+}
+
+const defaultCurrencies: Record<string, Currency> = {
+  USD: { code: "USD", name: "US Dollar", flag: "/usa-flag.png", symbol: "$" },
+  EUR: { code: "EUR", name: "Euro", flag: "/eur.png", symbol: "€" },
+  GBP: { code: "GBP", name: "British Pound", flag: "/gbp.png", symbol: "£" },
+  JPY: { code: "JPY", name: "Japanese Yen", flag: "/jpy.png", symbol: "¥" },
+  CAD: { code: "CAD", name: "Canadian Dollar", flag: "/cad.png", symbol: "C$" },
+  AUD: { code: "AUD", name: "Australian Dollar", flag: "/aud.png", symbol: "A$" },
+}
+
+const defaultExchangeRates: ExchangeRates = {
   USD: { EUR: 0.94, GBP: 0.82, JPY: 149.50, CAD: 1.36, AUD: 1.52 },
   EUR: { USD: 1.06, GBP: 0.87, JPY: 159.20, CAD: 1.45, AUD: 1.62 },
   GBP: { USD: 1.22, EUR: 1.15, JPY: 183.10, CAD: 1.66, AUD: 1.86 },
 }
 
-export function ExchangeWidget() {
-  const [fromCurrency, setFromCurrency] = useState("USD")
-  const [toCurrency, setToCurrency] = useState("EUR")
-  const [amount, setAmount] = useState(100)
-  const [availableBalance, setAvailableBalance] = useState(16058.94)
+export function ExchangeWidget({
+  title = "Exchange",
+  currencies = defaultCurrencies,
+  exchangeRates = defaultExchangeRates,
+  defaultFromCurrency = "USD",
+  defaultToCurrency = "EUR",
+  defaultAmount = 100,
+  availableBalance = 16058.94,
+  taxRate = 0.02,
+  feeRate = 0.01,
+  onExchange,
+  onCurrenciesClick,
+  onFromCurrencyChange,
+  onToCurrencyChange
+}: ExchangeWidgetProps) {
+  const [fromCurrency, setFromCurrency] = useState(defaultFromCurrency)
+  const [toCurrency, setToCurrency] = useState(defaultToCurrency)
+  const [amount, setAmount] = useState(defaultAmount)
 
   const getExchangeRate = (from: string, to: string): number => {
     if (from === to) return 1
-    return EXCHANGE_RATES[from]?.[to] || 0
+    return exchangeRates[from]?.[to] || 0
   }
 
   const exchangeRate = getExchangeRate(fromCurrency, toCurrency)
-  const taxRate = 0.02 
-  const feeRate = 0.01 
-
   const taxAmount = amount * taxRate
   const feeAmount = amount * feeRate
   const convertedAmount = (amount - taxAmount - feeAmount) * exchangeRate
 
   const swapCurrencies = () => {
-    setFromCurrency(toCurrency)
-    setToCurrency(fromCurrency)
+    const newFrom = toCurrency
+    const newTo = fromCurrency
+    setFromCurrency(newFrom)
+    setToCurrency(newTo)
+    onFromCurrencyChange?.(newFrom)
+    onToCurrencyChange?.(newTo)
   }
 
-  const fromCurrencyData = CURRENCIES[fromCurrency as keyof typeof CURRENCIES]
-  const toCurrencyData = CURRENCIES[toCurrency as keyof typeof CURRENCIES]
+  const fromCurrencyData = currencies[fromCurrency]
+  const toCurrencyData = currencies[toCurrency]
+
+  const handleExchange = () => {
+    onExchange?.(fromCurrency, toCurrency, amount)
+  }
 
   return (
     <Card className="p-6 shadow-2xs">
       <div className="flex items-center gap-2">
         <RefreshCw className="w-5 h-5 text-gray-600" />
-        <h3 className="font-semibold text-gray-900">Exchange</h3>
-        <button className="ml-auto text-sm text-gray-600 hover:text-gray-900 bg-white border border-gray-200 rounded-sm p-1 px-2">
+        <h3 className="font-semibold text-gray-900">{title}</h3>
+        <button 
+          onClick={onCurrenciesClick}
+          className="ml-auto text-sm text-gray-600 hover:text-gray-900 bg-white border border-gray-200 rounded-sm p-1 px-2"
+        >
           Currencies
         </button>
       </div>
@@ -138,7 +188,10 @@ export function ExchangeWidget() {
         </div>
       </div>
 
-      <Button className="w-full bg-white border border-gray-300 text-gray-900 hover:bg-gray-50">
+      <Button 
+        onClick={handleExchange}
+        className="w-full bg-white border border-gray-300 text-gray-900 hover:bg-gray-50"
+      >
         <RefreshCw className="w-4 h-4 mr-2" />
         Exchange
       </Button>
